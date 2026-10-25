@@ -1,0 +1,74 @@
+# Local configuration and credentials (only blank templates are public).
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.pgpass
+pgpass.conf
+credentials.json
+credentials*.json
+client_secret*.json
+token.json
+secrets.*
+
+# Environments, downloads, generated assets and local database state.
+.venv*/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+build/
+dist/
+*.egg-info/
+/studio_data/
+/outputs/
+/work/
+*.log
+*.dump
+*.backup
+*.db
+*.sqlite*
+*.download
+*.part
+
+# Recordings, model weights and archives are downloaded/generated locally.
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.mp4
+*.webm
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+*.index
+*.zip
+*.7z
+*.tar
+*.gz
+*.whl
+
+# Private working notes, machine-specific evidence and notebook outputs.
+/notes.md
+/task_plan.md
+/VALIDATION.md
+/work_generate_script.py
+*.ipynb
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# This upstream sample photograph contains GPS metadata; keep it local.
+/voice-pro-4.0.0/docs/celebrities30s/English/David Buss.jpg

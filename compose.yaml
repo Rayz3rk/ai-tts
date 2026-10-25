@@ -1,0 +1,13 @@
+services:
+  audio-studio:
+    build: .
+    ports:
+      - "127.0.0.1:7861:7861"
+    environment:
+      AUDIO_STUDIO_TOKEN: ${AUDIO_STUDIO_TOKEN:?Set AUDIO_STUDIO_TOKEN before starting}
+      AUDIO_STUDIO_DATABASE_URL: ${AUDIO_STUDIO_DOCKER_DATABASE_URL:?Set AUDIO_STUDIO_DOCKER_DATABASE_URL to a container-reachable PostgreSQL connection}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./studio_data:/data
+    restart: unless-stopped

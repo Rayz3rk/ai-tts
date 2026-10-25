@@ -1,0 +1,19 @@
+# Inference only. CUDA PyTorch is installed separately from its official index.
+transformers==4.57.6
+diffusers==0.37.0
+accelerate>=1.12,<2
+vector-quantize-pytorch>=1.27.15,<2
+soundfile>=0.13.1
+scipy>=1.10.1
+loguru>=0.7.3
+einops>=0.8.1
+PyYAML>=6
+numba>=0.63.1
+psutil>=5
+peft>=0.18,<0.19
+pytorch-wavelets>=1.3
+pywavelets>=1.9
+matplotlib>=3.7.5
+toml>=0.10
+# pytorch_wavelets uses pkg_resources; match the upstream Windows constraint.
+setuptools<72

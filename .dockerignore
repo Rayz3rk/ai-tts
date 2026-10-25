@@ -1,0 +1,5 @@
+*
+!pyproject.toml
+!audio_studio/
+!audio_studio/**
+audio_studio/**/__pycache__/

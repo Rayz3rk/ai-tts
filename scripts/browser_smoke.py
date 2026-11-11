@@ -59,7 +59,8 @@ def exercise_ui(url: str, browser_channel: str, screenshots: Path | None) -> Non
             builtin_count = page.locator("#generation-preset option").count()
             assert builtin_count >= 5
 
-            page.locator("#tab-presets").click()
+            page.locator("#nav-voices").click()
+            page.get_by_role("button", name="管理朗读预设", exact=True).click()
             page.locator("#new-preset").click()
             page.locator("#preset-name").fill("Browser smoke preset")
             assert page.locator("#preset-engine").input_value() == "kokoro"
@@ -76,7 +77,8 @@ def exercise_ui(url: str, browser_channel: str, screenshots: Path | None) -> Non
             page.locator("#use-edited-preset").click()
             assert page.locator("#generation-preset-summary h3").inner_text() == "<img src=x onerror=alert(1)>"
             assert page.locator("#generation-speed").input_value() == "0.9"
-            page.locator("#tab-presets").click()
+            page.locator("#nav-voices").click()
+            page.get_by_role("button", name="管理朗读预设", exact=True).click()
             page.locator("#delete-preset").click()
             page.wait_for_function("count => document.querySelectorAll('#preset-list .preset-card').length === count", arg=builtin_count)
 
@@ -86,7 +88,8 @@ def exercise_ui(url: str, browser_channel: str, screenshots: Path | None) -> Non
             page.locator("#preset-engine").select_option("f5")
             assert page.locator("#preset-f5-fields").is_visible()
 
-            page.locator("#tab-training").click()
+            page.locator("#nav-trainhub").click()
+            page.locator("#view-trainhub .task-card").filter(has_text="准备朗读数据 →").click()
             page.locator("#training-csv").fill(str(PROJECT_ROOT / "missing-smoke-dataset" / "metadata.csv"))
             page.locator("#training-wavs").fill(str(PROJECT_ROOT / "missing-smoke-dataset" / "wavs"))
             page.locator("#validate-dataset").click()
@@ -94,12 +97,13 @@ def exercise_ui(url: str, browser_channel: str, screenshots: Path | None) -> Non
             assert "CSV does not exist" in page.locator("#dataset-report").inner_text()
             assert page.locator("#training-model option").count() >= 1
 
-            page.locator("#tab-models").click()
+            page.locator("#nav-settings").click()
             assert page.locator("#model-list .model-card").count() >= 2
             assert page.locator("#dependency-list .dependency-row").count() >= 4
             page.locator("#register-details summary").click()
             assert page.locator("#register-form").is_visible()
-            page.locator("#tab-generate").click()
+            page.locator("#nav-home").click()
+            page.locator("[data-create=generate]").click()
             page.locator("#fill-example").click()
             assert page.locator("#synthesis-text").bounding_box()["width"] > 500
             page.wait_for_function("document.querySelectorAll('.toast').length === 0", timeout=15000)
@@ -109,8 +113,8 @@ def exercise_ui(url: str, browser_channel: str, screenshots: Path | None) -> Non
             page.set_viewport_size({"width": 390, "height": 844})
             if screenshots:
                 page.screenshot(path=str(screenshots / "studio-mobile.png"), full_page=True)
-            for name in ("generate", "presets", "training", "models"):
-                page.locator("#tab-" + name).click()
+            for name in ("home", "voices", "trainhub", "settings"):
+                page.locator("#nav-" + name).click()
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), name + " overflows"
             assert not errors, errors
         finally:

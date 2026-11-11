@@ -153,7 +153,7 @@ def create_app(data_dir: Path | None = None, device: str | None = None, database
 
     @app.get("/static/{filename}", include_in_schema=False)
     def static_asset(filename: str):
-        if filename not in {"covers.js", "covers.css", "singing.js", "music.js"}:
+        if filename not in {"covers.js", "covers.css", "singing.js", "music.js", "workbench.js", "workbench.css"}:
             raise HTTPException(404, "文件不存在")
         return FileResponse(Path(__file__).parent / "static" / filename)
 
@@ -285,6 +285,37 @@ def create_app(data_dir: Path | None = None, device: str | None = None, database
     @app.get("/api/jobs/{job_id}")
     def job(job_id: str):
         return app.state.jobs.get(job_id)
+
+    @app.get("/api/jobs/{job_id}/inputs")
+    def job_inputs(job_id: str):
+        app.state.jobs.get(job_id)
+        request = app.state.jobs.requests.get(job_id, {})
+        kind, payload = request.get("kind"), request.get("payload", {})
+        fields = {
+            "synthesize": ("text", "preset",),
+            "cover": ("source_audio", "accompaniment_audio", "pitch_shift", "index_rate", "vocal_gain", "accompaniment_gain", "seed", "speaker_id"),
+            "sing": ("score", "steps", "expressiveness", "pitch_shift", "index_rate"),
+            "compose": ("title", "lyrics", "style", "duration", "bpm", "language", "seed"),
+            "train": ("name", "model_id"),
+            "train_voice": ("name",),
+        }
+        if kind not in fields:
+            raise ValueError("此任务没有可复用的创作设置")
+        values = {key: payload[key] for key in fields[kind] if key in payload}
+        values.pop("preset", None)
+        if kind == "synthesize":
+            values["preset_id"] = payload.get("preset", {}).get("id")
+            values["speed"] = payload.get("preset", {}).get("speed", 1)
+        if kind == "cover":
+            values["model_id"] = payload.get("model", {}).get("id")
+        if kind == "sing":
+            values["target_voice_id"] = (payload.get("target_model") or {}).get("id", "")
+        if kind in {"train", "train_voice"}:
+            config = payload.get("config", {})
+            for key in ("csv_path", "wavs_dir", "epochs", "batch_size", "learning_rate", "grad_accumulation_steps", "max_steps"):
+                if key in config:
+                    values[key] = config[key]
+        return {"kind": kind, "values": values}
 
     @app.post("/api/jobs/{job_id}/cancel")
     def cancel(job_id: str):

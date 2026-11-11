@@ -37,6 +37,8 @@
     note.textContent = model ? model.quality_note || (demoVoice(model) ? '此音色仅用合成样本完成一次更新，用于验证转换流程，不代表可用的音色质量。请导入已训练好的音色，或使用自己的录音充分训练。' : '') : '';
     note.className = 'hint' + (model && demoVoice(model) ? ' error' : '');
   }
+  let pendingVoice=null;
+  function selectVoice(id){pendingVoice=id;if(data&&data.voices.some(v=>v.id===id)){$('cover-model').value=id;renderVoiceNote();}}
   async function refresh() {
     if (statusLoading) return;
     statusLoading=true;
@@ -47,7 +49,7 @@
       $('cover-assets-badge').className='badge '+(ready?'green':'');
       $('cover-assets-info').textContent=ready?'音频编码器、音高模型和训练基础权重已保存在本机。':'首次下载约 775MB。下载成功后，转换与训练只读取本地文件。';
       $('cover-download').hidden=ready;
-      const select=$('cover-model'), previous=select.value;
+      const select=$('cover-model'), previous=pendingVoice??select.value;pendingVoice=null;
       select.replaceChildren();
       for (const model of data.voices) select.append(el('option',{value:model.id,text:model.name+(demoVoice(model)?' · 仅流程测试':'')+(model.ready?'':' · 未就绪')}));
       if (!data.voices.length) select.append(el('option',{value:'',text:'请先导入或训练目标音色'}));
@@ -111,5 +113,5 @@
     if($('cover-training-steps').value)body.max_steps=Number($('cover-training-steps').value);
     await submitted(await api('/api/covers/train',{method:'POST',body}));
   });});
-  window.StudioCovers={refresh,sync};
+  window.StudioCovers={refresh,sync,selectVoice};
 })();

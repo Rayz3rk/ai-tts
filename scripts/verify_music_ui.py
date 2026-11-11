@@ -21,7 +21,8 @@ def main():
         page.set_default_timeout(90000)
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto("/", wait_until="networkidle")
-        page.locator("#tab-music").click()
+        page.locator("#nav-home").click()
+        page.locator("[data-create=music]").click()
         page.wait_for_function("!document.querySelector('#music-submit').disabled")
         if not evidence.get("job_id"):
             page.locator("#music-title").fill("自动创作验收 · 晨光里的小路")

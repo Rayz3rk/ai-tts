@@ -1,12 +1,62 @@
 # 声场 · 本地音频工作台
 
-在现有 Voice-Pro 旁新增一个可独立运行的音频工作台，支持预设音色、F5 本地微调、RVC 目标音色训练与翻唱，以及 DiffSinger 歌词/MIDI 演唱和目标音色串联。原 Voice-Pro 仍在 `voice-pro-4.0.0/`。
+从文字朗读到歌曲创作，在自己的电脑上完成音频生成、音色训练与作品管理。基于 Kokoro、F5-TTS、RVC、DiffSinger 和 ACE-Step 1.5，提供按任务组织的中文界面。
+
+[快速启动](#启动) · [使用指南](docs/workbench-guide.md) · [歌声流程](docs/song-workflows.md) · [验证说明](docs/validation.md)
+
+## 界面预览
+
+首页直接选择要完成的任务，无需先理解模型名称或训练参数。
+
+![声场首页：四种创作任务与六个主入口](docs/images/workbench/home.png)
+
+<details>
+<summary>展开查看：文字朗读、我的音色与手机布局</summary>
+
+**文字朗读**：输入内容、选择声音，生成后试听和下载。
+
+![文字朗读界面](docs/images/workbench/narration.png)
+
+**我的音色**：按能力标注，支持试听、收藏与直接用于创作。
+
+![我的音色界面](docs/images/workbench/voices.png)
+
+**手机布局**：小屏幕也能找到完整的创作与管理入口。
+
+<img src="docs/images/workbench/mobile.png" alt="声场手机端首页" width="320">
+
+</details>
+
+截图来自真实运行的界面，使用内置预设与演示文字，历史任务为空；不包含个人作品、录音、本机路径或连接凭据。
+
+## 可以做什么
+
+| 创作任务 | 准备内容 | 得到什么 |
+| --- | --- | --- |
+| 文字朗读 | 文字＋内置音色，或参考录音及转写 | 中英文朗读音频 |
+| 换音色翻唱 | 独立演唱人声＋训练好的 RVC 音色 | 保留原旋律和节奏的转换人声，可混入独立伴奏 |
+| 按旋律演唱 | 普通话歌词＋MIDI / 简谱 | 按指定旋律演唱的干声，可串联 RVC 转换 |
+| 歌词创作新歌 | 歌词＋音乐风格＋时长 | 自动创作的旋律、演唱与伴奏 |
+
+- **我的音色**：统一查看朗读预设与翻唱音色，明确区分用途；音色收藏保存在当前浏览器中。
+- **训练中心**：F5 朗读音色微调、RVC 翻唱音色训练，检查录音并自动注册产物。
+- **任务中心**：集中查看生成、训练和下载任务，支持筛选、取消、设置复用与调整后重试。
+- **作品库**：搜索、试听、下载、改名、标签与收藏；元数据由 PostgreSQL 管理，音频保存在本地。
+- **设置**：集中管理模型下载、运行环境和存储；专业参数默认折叠，缺少组件时提供就近准备入口。
+
+应用源码位于 `audio_studio/`，可独立运行。原 Voice-Pro 源码保留在 `voice-pro-4.0.0/`，安装环境与入口相互独立。
 
 ## 启动
 
-Windows PowerShell，项目目录下执行：
+需要 Windows、Git 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。安装脚本使用 Python 3.12；GPU 版依赖需要兼容的 NVIDIA 显卡及驱动。
+
+Windows PowerShell 中执行：
 
 ```powershell
+# 获取项目
+git clone https://github.com/Rayz3rk/ai-tts.git
+cd ai-tts
+
 # 首次安装：Python 3.12、PyTorch 2.8 CUDA 12.8 和音频依赖
 .\scripts\setup.ps1
 
@@ -14,7 +64,7 @@ Windows PowerShell，项目目录下执行：
 .\start-studio.ps1
 ```
 
-浏览器打开 <http://127.0.0.1:7861>。在「模型与任务」里显式下载所需模型，查看下载日志；模型完整后即可生成音频。无需启动 Voice-Pro，也无需下载它的 ASR、翻译和分离模型。安装过程需要联网；模型下载完成后，推理和训练读取本地文件。
+浏览器打开 <http://127.0.0.1:7861>，从首页选择创作类型。界面采用六个主入口，详见 [工作台使用指南](docs/workbench-guide.md)。在「设置」中按需下载模型，在「任务中心」查看日志；模型完整后即可生成音频。无需启动 Voice-Pro，也无需下载它的 ASR、翻译和分离模型。安装过程需要联网；模型下载完成后，推理和训练读取本地文件。
 
 Python 包默认使用清华镜像 `https://pypi.tuna.tsinghua.edu.cn/simple`。GPU 专用 PyTorch 轮子使用官方 CUDA 索引，spaCy 的英文模型使用官方发布文件，TTS 权重使用对应模型仓库。
 
@@ -52,41 +102,55 @@ Copy-Item .env.example .env
 | Kokoro 82M | 轻量中英文固定音色 | 文本、音色、语速 | 24kHz PCM WAV |
 | F5-TTS v1 | 参考音色合成、自有录音微调 | 文本、1–12 秒参考 WAV、参考文本 | 24kHz PCM WAV |
 
-「声音预设」可以保存自定义音色、用途、语速、采样步数和随机种子。F5 需要上传清晰参考音频，并填写与录音完全对应的转写；填写转写后不需要另行下载 ASR 模型。内置预设可复制，不可覆盖或删除。支持的 Kokoro 音色为普通话 `zf_xiaobei/zf_xiaoni/zf_xiaoxiao/zf_xiaoyi/zm_yunjian/zm_yunxi/zm_yunxia/zm_yunyang`，美式英语 `af_heart/am_adam`，英式英语 `bf_emma/bm_george`。
+「我的音色 → 管理朗读预设」可以保存自定义音色、用途、语速、采样步数和随机种子。F5 需要上传清晰参考音频，并填写与录音完全对应的转写；填写转写后不需要另行下载 ASR 模型。内置预设可复制，不可覆盖或删除。支持的 Kokoro 音色为普通话 `zf_xiaobei/zf_xiaoni/zf_xiaoxiao/zf_xiaoyi/zm_yunjian/zm_yunxi/zm_yunxia/zm_yunyang`，美式英语 `af_heart/am_adam`，英式英语 `bf_emma/bm_george`。
 
 长文本分段生成后拼接完整音频。生成成功后可试听和下载 WAV；缺失权重、无效输入或推理错误会显示失败原因，不返回占位音频。
 
-「音频素材」集中管理生成音频、参考录音和导入的验收样例，支持按名称、文本、文件名和标签搜索，修改名称与标签、收藏、分页、试听和下载。数据库保存文件路径、时长、采样率及关联模型、预设、任务等元数据；WAV 文件仍保存在磁盘。默认 Web 生成音频位于 `studio_data/audio/`，上传参考音频位于 `studio_data/references/`，历史验收样例位于 `outputs/`。CLI `synthesize` 使用 `--output` 指定位置；配置 PostgreSQL 后，Web 与 CLI 的生成音频都会立即登记，CLI `validate` 也会登记数据集检查结果。素材不存在时页面会标明文件缺失。
+「作品库」集中管理生成音频、参考录音和导入的验收样例，支持按名称、文本、文件名和标签搜索，修改名称与标签、收藏、分页、试听和下载。数据库保存文件路径、时长、采样率及关联模型、预设、任务等元数据；WAV 文件仍保存在磁盘。默认 Web 生成音频位于 `studio_data/audio/`，上传参考音频位于 `studio_data/references/`，历史验收样例位于 `outputs/`。CLI `synthesize` 使用 `--output` 指定位置；配置 PostgreSQL 后，Web 与 CLI 的生成音频都会立即登记，CLI `validate` 也会登记数据集检查结果。素材不存在时页面会标明文件缺失。
 
-当前工作台实现的是朗读、参考音色朗读和 F5 语音微调。目标音色演唱、歌声转换及歌词加旋律合成的区别与后续实施顺序见 [歌声功能路线](docs/singing-roadmap.md)。
+朗读、翻唱、按旋律演唱和自动创作新歌均已接入。三种歌声工作方式的输入要求与音色限制见 [歌声流程说明](docs/song-workflows.md)。
 
-## 本地训练
+## 歌声与音色训练
 
 F5 语音训练见下文。目标音色翻唱与歌词演唱使用独立的歌声流程：
 
 ### 目标音色翻唱
 
-侧栏「06 目标音色翻唱」支持 RVC v2 带 F0 模型：可导入本机 `.pth` 和可选 `.index`，也可用同一人的干净 WAV 目录训练新音色。首次下载 ContentVec、RMVPE 与 RVC v2/40k G/D 预训练权重，约 775MB；训练无需 CSV 或逐句转写。录音检查、分段准备、真实对抗训练、检查点、检索索引和导出模型均在本机完成，成功后自动注册音色。
+「开始创作 → 换音色翻唱」支持 RVC v2 带 F0 模型：可导入本机 `.pth` 和可选 `.index`，也可用同一人的干净 WAV 目录训练新音色。首次下载 ContentVec、RMVPE 与 RVC v2/40k G/D 预训练权重，约 775MB；训练无需 CSV 或逐句转写。录音检查、分段准备、真实对抗训练、检查点、检索索引和导出模型均在本机完成，成功后自动注册音色。
 
 选择目标音色，上传演唱干声或填写本机音频路径，设置升降调和索引混合比例后生成。可另选独立伴奏和音量，输出混音与转换后干声，均可试听、下载并自动收录。「翻唱」入口要求已分离的人声，不自动从整首歌曲中分离伴奏。上传音频限 0.5–600 秒、150MB，解码后规范为 WAV。
 
-导入的 RVC v2/F0 模型支持 32/40/48kHz；本地训练产物为 40kHz。当前不接受 v1 或无 F0 的模型。RVC 需要已训练的音色模型，短参考录音不会直接成为免训练的歌声音色。请用更多、覆盖目标音域的真实干净录音评估个人音色相似度、长音与泛化；内置验收模型只用合成样本验证链路。
+导入的 RVC v2/F0 模型支持 32/40/48kHz；本地训练产物为 40kHz。当前不接受 v1 或无 F0 的模型。RVC 需要已训练的音色模型，短参考录音不会直接成为免训练的歌声音色。请用更多、覆盖目标音域的真实干净录音评估个人音色相似度、长音与泛化；本地验收模型只用合成样本验证链路。
 
 ### 歌词与旋律演唱
 
-侧栏「07 歌词与旋律演唱」使用作者发布的绮萱 v2.7.0 DiffSinger ONNX 模型和匹配的 OpenVPI 神经声码器，下载压缩包约 474MB。支持普通话汉字或拼音：导入 MIDI，明确选择单声部旋律轨道，再把歌词填入音符；也可直接编辑表格中的歌词、音高、起点与时长。MIDI 速度变化会转换为实际秒数，重叠和弦不会被静默当成单声部旋律。一字多音的后续音符使用 `-`，休止音高使用 `rest`。
+「开始创作 → 按旋律演唱」使用作者发布的绮萱 v2.7.0 DiffSinger ONNX 模型和匹配的 OpenVPI 神经声码器，下载压缩包约 474MB。支持普通话汉字或拼音：整段填写歌词与简谱 / 音名，按 BPM 自动计算时长；也可导入 MIDI 并选择单声部旋律轨道。逐音符编辑默认收起，供局部调整。MIDI 速度变化会转换为实际秒数，重叠和弦不会被静默当成单声部旋律。一字多音的后续音符使用 `-`，休止音高使用 `rest`。
 
 检查乐谱后选择原音色生成 44.1kHz 人声，或选择已就绪的 RVC 目标音色，自动执行「歌词/乐谱 → DiffSinger → RVC」。串联时同时保留声库原音色与转换结果，记录乐谱、模型、任务、参数及来源署名。最长 10 分钟，按乐句生成；当前 DiffSinger 使用 CPU，RVC 跟随工作台设备设置。
 
 绮萱模型、词典与原始使用条款完整保存在模型目录中。输出与素材记录附有“AI 合成 · 绮萱 / DiffSinger”署名；公开发布时按作者条款注明来源。该声库的声学输出及其转换版本不用于音色训练；本项目 RVC 训练验收使用 Kokoro 合成样本，未使用绮萱输出训练。声码器权重按 CC BY-NC-SA 4.0 发布，完整条件见随附 NOTICE 和[官方声库条款](https://github.com/yqzhishen/qixuan-diffsinger/blob/main/terms_of_use/Terms_of_Use.zh-CN.md)。
 
+### 歌词创作新歌
+
+「开始创作 → 歌词创作新歌」使用 ACE-Step 1.5，根据歌词与风格生成旋律、演唱和伴奏，无需手工填写音符。当前单次可选 10–180 秒，建议先生成 30 秒试听；音色由生成模型决定，歌词遵循度和效果可能随随机种子变化。
+
+先在项目根目录准备独立环境和权重：
+
+```powershell
+.\scripts\setup-music.ps1
+```
+
+使用 2B turbo、0.6B 音乐语言模型、文本编码器和 VAE，权重约 7.2GiB；独立环境位于 `studio_data/runtimes/ace-step/`，需要 CUDA 显卡。主工作台的 TTS / RVC 依赖保留在根目录 `.venv`。普通依赖使用清华镜像，CUDA 大文件通过专用镜像续传并核对官方哈希。该独立推理环境不包含 ACE-Step 的训练界面。
+
+### F5 朗读音色微调
+
 以下为 F5 语音训练流程。
 
-1. 在模型页下载 F5 基础模型，包含配套词表和 Vocos 声码器。
-2. 准备逐句 WAV 和 CSV。现有 `outputs/mandarin_tts_recording_script.csv` 含 260 条录音稿，可以直接使用，但必须自行完成实际录音。
-3. 在「本地训练」填写 CSV 和录音目录的绝对路径，点击检查数据。
+1. 在「设置」中下载 F5 基础模型，包含配套词表和 Vocos 声码器。
+2. 准备自己的逐句 WAV 与对应 CSV；文件格式见下文示例。仓库不包含个人录音或本机验收数据。
+3. 在「训练中心 → 训练朗读音色」填写 CSV 和录音目录的绝对路径，点击检查数据。
 4. 设置训练名称、轮数和学习率，提交训练。12GB GPU 建议从 batch_size=1、梯度累积=4 开始；实际显存消耗与录音长度有关。
-5. 在任务页查看真实 loss、训练日志和状态。训练成功会导出 EMA 权重并自动注册模型，在声音预设中选择该模型并配置参考音频即可生成声音。
+5. 在任务页查看真实 loss、训练日志和状态。训练成功会导出 EMA 权重并自动注册模型，在朗读预设中选择该模型并配置参考音频即可生成声音。
 
 数据格式一：现有录音稿格式，`id` 按原样保留前导零，与 `001.wav` 等对应。
 
@@ -135,6 +199,7 @@ API 文档在 <http://127.0.0.1:7861/docs>。主要入口：
 | `POST /api/datasets/validate` | 检查本地数据 |
 | `POST /api/train` | 提交真实微调任务 |
 | `GET /api/jobs/{id}` | 状态、结果、日志 |
+| `GET /api/jobs/{id}/inputs` | 获取可复用的创作 / 训练设置 |
 | `POST /api/jobs/{id}/cancel` | 取消排队或运行中的任务 |
 | `GET /api/audio-assets` | 音频素材搜索与分页（query、limit、offset） |
 | `PATCH /api/audio-assets/{id}` | 修改名称、标签、收藏 |
@@ -146,6 +211,9 @@ API 文档在 <http://127.0.0.1:7861/docs>。主要入口：
 | `GET /api/singing/status` / `POST /api/singing/assets` | 歌声模型状态 / 显式下载 |
 | `POST /api/singing/midi` / `POST /api/singing/score/validate` | MIDI 轨道与歌词导入 / 乐谱校验 |
 | `POST /api/singing/generate` | 歌词/音符演唱，可串联 RVC 目标音色 |
+| `POST /api/singing/score/from-text` | 歌词＋简谱 / 音名＋BPM 批量编谱 |
+| `GET /api/music/status` / `POST /api/music/assets` | 自动创作状态 / 下载权重 |
+| `POST /api/music/generate` | 提交歌词自动创作任务 |
 
 下载、生成、训练通过串行队列进入独立进程，避免抢占显存。取消运行中的任务会终止其工作进程；任务结束后模型随进程释放。接入 PostgreSQL 后任务状态和请求写入数据库，本地保留任务恢复记录和工作进程日志；服务中断后未完成的任务标为失败，需重新提交。请以单服务进程运行，勿在同一数据目录启动多个服务或并发运行 CLI 训练。
 
@@ -153,7 +221,7 @@ API 文档在 <http://127.0.0.1:7861/docs>。主要入口：
 .venv\Scripts\python.exe -m audio_studio status
 .venv\Scripts\python.exe -m audio_studio download kokoro
 .venv\Scripts\python.exe -m audio_studio download f5
-.venv\Scripts\python.exe -m audio_studio validate outputs\mandarin_tts_recording_script.csv recordings
+.venv\Scripts\python.exe -m audio_studio validate datasets\metadata.csv recordings
 .venv\Scripts\python.exe -m audio_studio synthesize --preset zh-narration --text '你好，这是本地语音模型。' --output outputs\hello.wav
 ```
 
@@ -178,7 +246,7 @@ pg_dump -h 127.0.0.1 -p 5432 -U audio_studio_app -W -d audio_studio -Fc -f audio
 
 恢复时用 PostgreSQL 工具将备份恢复到专用数据库，恢复上述磁盘目录并配置新的应用连接。保留 `workspace.json` 才能继续使用原工作区记录；目录内路径会随数据目录位置调整，目录外文件需保持可访问或重新登记。
 
-本机部署使用 `start-studio.ps1`，自动选择当前 PyTorch 可用的设备；也可指定 `-Device cpu` 或 `-Device cuda`。本次验收环境为 CPU 版 PyTorch。需要局域网访问时先设置 `AUDIO_STUDIO_TOKEN`，再指定 `serve --host 0.0.0.0`；浏览器页面右上角可填写令牌，API 使用 `Authorization: Bearer <token>`。页面默认同源访问。远程使用可在前面配置 HTTPS 反向代理。
+本机部署使用 `start-studio.ps1`，自动选择当前 PyTorch 可用的设备；也可指定 `-Device cpu` 或 `-Device cuda`。主工作台支持 CPU / CUDA；自动创作采用独立 CUDA 环境。需要局域网访问时先设置 `AUDIO_STUDIO_TOKEN`，再指定 `serve --host 0.0.0.0`；浏览器页面右上角可填写令牌，API 使用 `Authorization: Bearer <token>`。页面默认同源访问。远程使用可在前面配置 HTTPS 反向代理。
 
 提供 CPU Docker 部署配置：
 
@@ -208,6 +276,7 @@ PostgreSQL 集成测试另需设置 `AUDIO_STUDIO_TEST_DATABASE_URL`，使用独
 
 ```powershell
 python scripts/browser_smoke.py --screenshots outputs
+python scripts/verify_workbench_ui.py --screenshots outputs
 ```
 
 所有内置预设的真实语音输出，以及包含完整 F5 微调和再次生成音频的 API 验收：
@@ -230,3 +299,9 @@ python scripts/browser_smoke.py --screenshots outputs
 - [Kokoro 官方推理库](https://github.com/hexgrad/kokoro)；[官方模型卡及许可](https://huggingface.co/hexgrad/Kokoro-82M)。
 - 显式下载记录上游仓库 revision，并保留模型卡。模型的使用范围由对应模型卡中的许可确定。
 - Voice-Pro 的修复：Kokoro 保存所有生成片段；F5 合成失败时停止后续文件处理。其余完整应用依赖及功能独立于本工作台。
+
+## 源码与本地数据
+
+仓库发布源码、依赖文件、安装脚本、空白配置模板及经过检查的界面截图。`.env`、`studio_data/`、`outputs/`、`work/`、虚拟环境、模型权重、录音与生成音频均留在本地。首次安装需要自行准备数据库配置、下载模型并添加自己的音频。
+
+复现 README 截图：安装 Playwright 和 Edge、启动工作台后，运行 `python scripts/capture_readme.py`。脚本仅展示内置预设与演示文字，在截图会话中隐藏历史任务和个人模型，不修改实际数据。

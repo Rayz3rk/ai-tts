@@ -15,7 +15,8 @@ def main():
         page = browser.new_page(base_url="http://127.0.0.1:7861", viewport={"width": 1440, "height": 1100})
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto("http://127.0.0.1:7861/", wait_until="networkidle")
-        page.locator("#tab-covers").click()
+        page.locator("#nav-home").click()
+        page.locator("[data-create=covers]").click()
         page.locator("#cover-model option[value='rvc-e87029619731']").wait_for(state="attached")
         assert "仅" in page.locator("#cover-voice-note").inner_text()
         before = page.request.get("/api/jobs").json()
@@ -25,7 +26,8 @@ def main():
         assert loaded.value.status == 200
         assert Path(page.locator("#cover-source").input_value()).resolve() == ROOT / "outputs/samples/singing-dry-demo.wav"
         assert len(page.request.get("/api/jobs").json()) == len(before)
-        page.locator("#tab-singing").click()
+        page.locator("#nav-home").click()
+        page.locator("[data-create=singing]").click()
         assert not page.locator("#singing-advanced").evaluate("e=>e.open")
         quality = json.loads((OUT / "singing-quality-job.json").read_text(encoding="utf-8"))
         page.locator("#singing-job-list button").filter(has_text=quality["score"]["title"]).first.click()

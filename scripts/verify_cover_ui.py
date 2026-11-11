@@ -39,14 +39,15 @@ def main() -> None:
             page = browser.new_page(viewport={"width": 1440, "height": 1100})
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(BASE, wait_until="networkidle")
-            page.locator("#tab-covers").click()
+            page.locator("#nav-home").click()
+            page.locator("[data-create=covers]").click()
             page.locator(f"#cover-model option[value='{model_id}']").wait_for(state="attached")
             page.locator("#cover-model").select_option(model_id)
             if not evidence.get("job_id"):
                 with page.expect_response(lambda r: "/api/covers/audio?kind=source" in r.url) as uploaded:
                     page.locator("#cover-source-file").set_input_files(source)
                 assert uploaded.value.status == 200, uploaded.value.text()
-                page.locator("#cover-form summary").click()
+                page.locator("#cover-accompaniment").locator("xpath=ancestor::details[1]/summary").click()
                 with page.expect_response(lambda r: "/api/covers/audio?kind=accompaniment" in r.url) as uploaded_backing:
                     page.locator("#cover-accompaniment-file").set_input_files(backing)
                 assert uploaded_backing.value.status == 200, uploaded_backing.value.text()

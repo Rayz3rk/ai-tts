@@ -48,7 +48,8 @@ def main():
             page.set_default_timeout(120000)
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(BASE, wait_until="networkidle")
-            page.locator("#tab-singing").click()
+            page.locator("#nav-home").click()
+            page.locator("[data-create=singing]").click()
             page.locator(f"#singing-target option[value='{target}']").wait_for(state="attached")
             if not evidence.get("job_id"):
                 page.locator("#singing-title").fill("歌词旋律串联验收")

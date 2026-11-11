@@ -76,7 +76,7 @@ def main() -> None:
         try:
             page.goto(base, wait_until="networkidle")
             page.locator("#connection-status.ok").wait_for()
-            page.locator("#tab-assets").click()
+            page.locator("#nav-assets").click()
             expect(page.locator("#asset-list")).to_have_attribute("aria-busy", "false")
             page.locator("#asset-query").fill(asset["filename"])
             page.locator("#asset-search-form").get_by_role("button", name="搜索", exact=True).click()

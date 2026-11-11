@@ -41,6 +41,8 @@ with TestClient(audio_studio.api.create_app(target/'data')) as client:
     assert client.get('/static/covers.js').status_code==200
     assert client.get('/static/singing.js').status_code==200
     assert client.get('/static/music.js').status_code==200
+    assert client.get('/static/workbench.js').status_code==200
+    assert client.get('/static/workbench.css').status_code==200
     assert client.get('/api/covers/status').json()['assets']['engine']=='rvc'
     assert client.get('/api/singing/status').json()['model']['engine']=='diffsinger'
     assert client.get('/api/music/status').json()['model']['engine']=='ace_step'
